@@ -61,11 +61,14 @@ class GraphMaxPoolingFunction(function.Function):
         x_pairs = x[:, :, self.pooling_inds]
         N_coarse = len(self.pooling_inds)
         m = self.pooling_inds[np.arange(N_coarse), x_pairs.argmax(axis=3)]
+        print('m.shape',m.shape)
         x_inds = np.arange(x.size).reshape(x.shape)
         self.max_inds = x_inds[
             np.arange(n_batch)[:, None, None],
             np.arange(c)[None, :, None],
             m]
+
+        print('self.max_inds',self.max_inds.shape,self.max_inds)
         return x_pairs.max(axis=3),
 
     def forward_gpu(self, inputs):

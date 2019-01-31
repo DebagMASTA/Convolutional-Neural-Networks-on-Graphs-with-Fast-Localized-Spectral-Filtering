@@ -22,16 +22,24 @@ class GraphCNN(chainer.Chain):
         super(GraphCNN, self).__init__()
 
         # Precompute the coarsened graphs
-        graphs, pooling_inds = coarsening.coarsen(A, levels=4)
+        graphs, pooling_inds = coarsening.coarsen(A, levels=6)
         # In order to simulate 2x2 max pooling, combine the 4 levels
         # of graphs into 2 levels by combining pooling indices.
-        graphs, pooling_inds = coarsening.combine(graphs, pooling_inds, 2)
+        graphs, pooling_inds = coarsening.combine(graphs, pooling_inds, 3)
+        # print('pooling_inds',pooling_inds)
 
         self.graph_layers = []
         sizes = [32, 64]
         for i, (g, inds, s) in enumerate(zip(graphs, pooling_inds, sizes)):
-            f = GraphConvolution(None, s, g, K=25)
+            print('s:',s)
+            print('g:',g)
+            print('g.shape:',g.shape)
+
+            f = GraphConvolution(#None,
+                                 1,
+                                 s, g, K=25)
             self.add_link('gconv{}'.format(i), f)
+            print('inds',inds.shape,inds)
             p = GraphMaxPoolingFunction(inds)
             self.graph_layers.append((f, p))
 
@@ -48,15 +56,19 @@ class GraphCNN(chainer.Chain):
     def __call__(self, x, *args):
         # x.shape = (n_batch, n_channels, h*w)
         dropout_ratio = 0.5
-
         h = x
+        print('h.shape',h.shape)
+        print('h',h)
         # Graph convolutional layers
         for f, p in self.graph_layers:
-            h = p(F.relu(f(h)))
+            # h = p(F.relu(f(h)))
+            aa=f(h)
+            bb=F.relu(aa)
+            h=p(bb)
 
         # Fully connected layers
         for f in self.linear_layers:
-            h = F.relu(F.dropout(f(h), dropout_ratio))
+            h = F.relu(F.dropout(f(h), dropout_ratio, train=self.train))
 
         # Linear classification layer
         h = self.cls_layer(h)

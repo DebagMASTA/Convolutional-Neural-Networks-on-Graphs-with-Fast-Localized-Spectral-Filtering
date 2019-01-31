@@ -89,5 +89,6 @@ def grid_graph(m):
     # Adapted from https://github.com/mdeff/cnn_graph/blob/master/lib/graph.py
     z = grid(m)
     dist, idx = distance_sklearn_metrics(z, k=8)
+
     A = adjacency(dist, idx)
     return A

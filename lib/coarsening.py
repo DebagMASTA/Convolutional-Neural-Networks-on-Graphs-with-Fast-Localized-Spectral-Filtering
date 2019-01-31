@@ -85,6 +85,7 @@ def metis(W, levels):
         # first
         ss = np.array(W.sum(axis=0)).squeeze()
         rid = np.argsort(ss)
+    # print('pooling_inds',len(pooling_inds[0]),len(pooling_inds[1]),len(pooling_inds[2]),len(pooling_inds[3]))
 
     return graphs, parents, np.array(pooling_inds)
 
@@ -96,6 +97,7 @@ def metis_one_level(rr, cc, vv, rid, weights):
     # of each vertex is its degree
 
     nnz = rr.shape[0]
+    print('nnz',nnz)
     N = rr[nnz - 1] + 1
 
     marked = np.zeros(N, np.bool)
@@ -168,8 +170,17 @@ def combine(graphs, pooling_inds, n):
     assert (len(graphs) - 1) % n == 0
     assert len(pooling_inds) % n == 0
     new_pooling_inds = []
+    print('len(pooling_inds)',len(pooling_inds))
     for i in six.moves.range(0, len(pooling_inds), n):
-        p1, p2 = map(np.array, pooling_inds[i:i + n])
-        p = p1[p2].reshape((p2.shape[0], -1))
+        # p1, p2 = map(np.array, pooling_inds[i:i + n])
+        p1, p2,p3 = map(np.array, pooling_inds[i:i + n])
+        # print('p1',p1.shape,p1)
+        # print('p2',p2.shape,p2)
+        # p = p1[p2].reshape((p2.shape[0], -1))
+        p = p1[p2[p3]].reshape((p3.shape[0], -1))
+
+        # print('p',p.shape,p)
         new_pooling_inds.append(p)
-    return [graphs[0]] + graphs[2::n], new_pooling_inds
+    # return [graphs[0]] + graphs[2::n], new_pooling_inds
+    return [graphs[0]] + graphs[3::n], new_pooling_inds
+

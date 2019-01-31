@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # @author Tommi Kerola
-import os, sys, time
+
 import argparse
 import json
 
@@ -12,11 +12,11 @@ from chainer import optimizers
 from chainer.training import extensions
 from chainer.training.updater import ParallelUpdater
 
-sys.path.append(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath( __file__ )), '../')))
 from lib import graph
 from lib.models import graph_cnn
 
-#aa
+import os
+
 class TestModeEvaluator(extensions.Evaluator):
 
     def evaluate(self):
@@ -34,14 +34,17 @@ def concat_and_reshape(batch, device=None, padding=None):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--config', '-c', type=str,
-                        required=True, help='Configuration file')
+    parser.add_argument('--config', '-c', type=str,default="C:\\Users\\yambe\\PycharmProjects\\chainer(1.19.0)-graph-cnn-master\\configs\\default.json",
+                         help='Configuration file')
     parser.add_argument('--outdir', '-o', type=str,
-                        required=True, help='Output directory')
-    parser.add_argument('--epoch', '-e', type=int,
-                        required=True, help='Number of epochs to train for')
-    parser.add_argument('--gpus', '-g', type=int, nargs="*",
-                        required=True, help='GPU(s) to use for training')
+                        default="C:\\Users\\yambe\\PycharmProjects\\chainer(1.19.0)-graph-cnn-master\\results", help='Output directory')
+    parser.add_argument('--epoch', '-e', type=int,default=100,
+                         help='Number of epochs to train for')
+    parser.add_argument('--gpus', '-g', type=int, nargs="*",default=[-1],
+                         help='GPU(s) to use for training')
+    # parser.add_argument('--gpu', '-g', type=int, default=-1,
+    #                     help='GPU ID (negative value indicates CPU)')
+
     parser.add_argument('--val-freq', type=int, default=1,
                         help='Validation frequency')
     parser.add_argument('--snapshot-freq', type=int,
@@ -63,6 +66,8 @@ def main():
             config['optimizer']['weight_decay']))
 
     devices = {'main': args.gpus[0]}
+    # devices = {'main': args.gpu}
+
     for gid in args.gpus[1:]:
         devices['gpu{}'.format(gid)] = gid
     config['batch_size'] *= len(args.gpus)
@@ -84,8 +89,10 @@ def main():
         TestModeEvaluator(val_iter, model, device=devices['main'],
                           converter=concat_and_reshape),
         trigger=(args.val_freq, 'epoch'))
+    # aaa=args.snapshot_freq, 'epoch'
+    # print('aaa',aaa)
     trainer.extend(
-        extensions.snapshot(filename='snapshot_iter_{.updater.epoch}.npz'), trigger=(args.snapshot_freq, 'epoch'))
+        extensions.snapshot(),trigger=(args.snapshot_freq, 'epoch'))
     trainer.extend(
         extensions.LogReport(trigger=(args.log_freq, 'epoch')))
     trainer.extend(extensions.PrintReport([
