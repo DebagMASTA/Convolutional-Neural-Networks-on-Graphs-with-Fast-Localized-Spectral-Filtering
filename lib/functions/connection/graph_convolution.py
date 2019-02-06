@@ -7,10 +7,9 @@ import six
 
 import chainer
 from chainer import cuda
-from chainer.cuda import cupy
+from chainer.backends.cuda import cupy
 from chainer import function
 from chainer.utils import type_check
-
 
 def chebyshev_matvec_cpu(C, x, K, n_batch, LmI):
     C[:, 0] = x.transpose((0, 2, 1))  # (n_batch, N, c_in)
